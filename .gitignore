@@ -1,3 +1,4 @@
 .env
+src/__pycache__/
 src/misc/app.log
 src/misc/notification_records.json
