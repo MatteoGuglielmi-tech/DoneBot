@@ -3,6 +3,7 @@
 The scope of this project is to have a tool that notifies the user about the status of a subroutine he's not directly in control of.
 
 > Example of use case
+> 
 > When working remotely via ssh, it might be helpful having a pop-up notification on your mobile informing you that a long subroutine ended without the need of staring at the monitor for hours (you eyes will thank me).
 
 ## What it does
