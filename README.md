@@ -32,7 +32,6 @@ At this point, create a `.env` file in the root folder and fill it with the foll
 
 
 > [!NOTE]
->
 > The Bot you just created needs to be started manually before running the python script.
 
 ## End of the story
