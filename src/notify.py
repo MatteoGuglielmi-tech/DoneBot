@@ -24,7 +24,7 @@ from utils import UNUSED
 class NotifyBot:
     # ==== Constructor ====
 
-    def post_init(self) -> None:
+    def __post_init__(self) -> None:
         self.secret: dict[str, str] = utils.get_env_variables()
         self.config: dict[str, str] = utils.get_env_variables(pth=".conf")
         self.notification_history: dict[str, list[dict[str, str | int]]] = {}
@@ -41,6 +41,8 @@ class NotifyBot:
         except Exception as e:
             logger.error(f"Telegram send failed: {e}")
 
+    # for now, email feature has not been tested
+    # tg is fine for me
     def send_email_notification(self, subject: str, body: str) -> None:
         if not self.secret["EMAIL_ENABLED"]:
             logger.debug(msg="Email not enabled")
@@ -210,6 +212,5 @@ class NotifyBot:
 
 if __name__ == "__main__":
     nb: NotifyBot = NotifyBot()
-    nb.post_init()
     nb.load_past_notifications()
     asyncio.run(nb.main())
