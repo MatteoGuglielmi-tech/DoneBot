@@ -3,10 +3,8 @@ import argparse
 import asyncio
 import json
 import os
-import smtplib
 from dataclasses import dataclass
 from datetime import datetime
-from email.message import EmailMessage
 
 import argcomplete
 import requests
@@ -40,29 +38,6 @@ class NotifyBot:
             logger.info("Telegram message sent")
         except Exception as e:
             logger.error(f"Telegram send failed: {e}")
-
-    # for now, email feature has not been tested
-    # tg is fine for me
-    def send_email_notification(self, subject: str, body: str) -> None:
-        if not self.secret["EMAIL_ENABLED"]:
-            logger.debug(msg="Email not enabled")
-            return
-        try:
-            msg = EmailMessage()
-            msg.set_content(body)
-            msg["Subject"] = subject
-            msg["From"] = self.secret["EMAIL_ADDRESS"]
-            msg["To"] = self.secret["EMAIL_RECIPIENT"]
-
-            with smtplib.SMTP(
-                self.secret["SMTP_SERVER"], int(self.secret["SMTP_PORT"])
-            ) as smtp:
-                smtp.starttls()
-                smtp.login(self.secret["EMAIL_ADDRESS"], self.secret["EMAIL_PASSWORD"])
-                smtp.send_message(msg)
-            logger.info(msg="📨 Email sent 📨")
-        except Exception as e:
-            logger.error(f"⛔ Email send failed: {e} ⛔")
 
     # ==== PERSISTENT HISTORY ====
     def load_past_notifications(self) -> None:
