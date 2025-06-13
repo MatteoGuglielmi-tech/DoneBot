@@ -2,7 +2,7 @@
 `DoneBot` consists in a simple implementation of a Telegram bot capable of asynchronously sending notifications to a Telegram chat based on the status of a background running process being observed.
 The scope of this project is to have a tool that notifies the user about the status of a subroutine he's not directly in control of.
 
-> [!EXAMPLE] Example of use case
+> Example of use case
 > When working remotely via ssh, it might be helpful having a pop-up notification on your mobile informing you that a long subroutine ended without the need of staring at the monitor for hours (you eyes will thank me).
 
 ## What it does
@@ -19,7 +19,7 @@ To use the Bot, there are a couple of steps to take:
   2. get your `chat_id` -> search for `@userinfobot` in Telegram, start the bot up and copy your id.
   3. create your bot -> look for `@BotFather` in Telegram, start it up and copy the token to access the HTTP API.
 
-  > [!CAUTION] CRITICAL: Keep the `chat_id` and `bot_token` for yourself, do not share it with somebody else.
+  > CRITICAL: Keep the `chat_id` and `bot_token` for yourself, do not share it with somebody else.
 
 At this point, create a `.env` file in the root folder and fill it with the following sensible information:
 
@@ -29,7 +29,7 @@ At this point, create a `.env` file in the root folder and fill it with the foll
 >```
 
 
-> [!NOTE] START YOUR BOT!
+> START YOUR BOT!
 > The Bot you just created needs to be started manually before running the python script.
 
 ## End of the story
