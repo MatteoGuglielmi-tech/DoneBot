@@ -19,7 +19,8 @@ To use the Bot, there are a couple of steps to take:
   2. get your `chat_id` -> search for `@userinfobot` in Telegram, start the bot up and copy your id.
   3. create your bot -> look for `@BotFather` in Telegram, start it up and copy the token to access the HTTP API.
 
-  > CRITICAL: Keep the `chat_id` and `bot_token` for yourself, do not share it with somebody else.
+  > [!CAUTION]
+  > Keep the `chat_id` and `bot_token` for yourself, do not share it with somebody else.
 
 At this point, create a `.env` file in the root folder and fill it with the following sensible information:
 
@@ -29,7 +30,8 @@ At this point, create a `.env` file in the root folder and fill it with the foll
 >```
 
 
-> START YOUR BOT!
+> [!NOTE]
+>
 > The Bot you just created needs to be started manually before running the python script.
 
 ## End of the story
