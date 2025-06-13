@@ -5,6 +5,7 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Coroutine
 
 import argcomplete
 import requests
@@ -52,7 +53,9 @@ class NotifyBot:
             json.dump(obj=data, fp=f, indent=2, sort_keys=False)
 
     # ==== Telegram handlers ====
-    async def clearchat(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def clearchat(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         chat_id: str = str(update.effective_chat.id)
         bot: ExtBot = context.bot
         deleted: int = 0
@@ -115,7 +118,7 @@ class NotifyBot:
             chat_id=int(chat_id), message_id=limit_warning.message_id
         )
 
-    async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         UNUSED(context)
         await update.message.reply_text(
             "👋 Bot is ready.👋\n"
@@ -124,7 +127,7 @@ class NotifyBot:
         )
 
     # ==== SEND AND TRACK NOTIFICATIONS ====
-    async def send_notification(self, text: str, bot, command: list):
+    async def send_notification(self, text: str, bot, command: list) -> None:
         msg = await bot.send_message(chat_id=int(self.secret["CHAT_ID"]), text=text)
 
         # Add metadata
@@ -140,7 +143,7 @@ class NotifyBot:
         self.save_sent_notifications(data=self.notification_history)
 
     # ==== RUN SHELL COMMAND ====
-    async def run_with_notification(self, command: list, bot: ExtBot):
+    async def run_with_notification(self, command: list, bot: ExtBot) -> None:
         proc = await asyncio.create_subprocess_exec(
             *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
@@ -154,7 +157,7 @@ class NotifyBot:
         await self.send_notification(text, bot, command)
 
     # ==== Entrypoint ====
-    async def main(self):
+    async def main(self) -> None:
         parser = argparse.ArgumentParser(description="Notify when a process finishes.")
         parser.add_argument(
             "--cmd",
