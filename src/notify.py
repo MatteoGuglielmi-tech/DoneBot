@@ -3,42 +3,30 @@ import argparse
 import asyncio
 import json
 import os
+import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Coroutine
 
 import argcomplete
-import requests
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, ContextTypes
 from telegram.ext._extbot import ExtBot
 
 import utils
-from stdout import logger
+from stdout import Formatter, logger
 from utils import UNUSED
 
 
 @dataclass
 class NotifyBot:
     # ==== Constructor ====
+    fmt: Formatter = Formatter()
 
     def __post_init__(self) -> None:
         self.secret: dict[str, str] = utils.get_env_variables()
         self.config: dict[str, str] = utils.get_env_variables(pth=".conf")
         self.notification_history: dict[str, list[dict[str, str | int]]] = {}
-
-    # ==== NOTIFICATIONS ====
-    def send_telegram_message(self, message: str) -> None:
-        url = f"https://api.telegram.org/bot{self.secret["BOT_TOKEN"]}/sendMessage"
-        try:
-            res = requests.post(
-                url, data={"chat_id": self.secret["CHAT_ID"], "text": message}
-            )
-            res.raise_for_status()
-            logger.info("Telegram message sent")
-        except Exception as e:
-            logger.error(f"Telegram send failed: {e}")
 
     # ==== PERSISTENT HISTORY ====
     def load_past_notifications(self) -> None:
@@ -52,10 +40,20 @@ class NotifyBot:
         with open(file=self.config["STORAGE_PATH"], mode="w") as f:
             json.dump(obj=data, fp=f, indent=2, sort_keys=False)
 
+    def progress_bar(self, current: int, total: int, length: int = 50) -> str:
+        done: int = int(length * current / total)
+        return "█" * done + "-" * (length - done)
+
+    def display_progress_bar(
+        self, fmt: str, mode: str = "fstring", **kwargs: str
+    ) -> None:
+        self.fmt.safe_fprint(fmt=fmt, mode=mode, **kwargs)
+
     # ==== Telegram handlers ====
     async def clearchat(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
+        assert update.effective_chat is not None
         chat_id: str = str(update.effective_chat.id)
         bot: ExtBot = context.bot
         deleted: int = 0
@@ -64,6 +62,7 @@ class NotifyBot:
         # doesn't raise a keyerror and return the default
         for entry in self.notification_history.get(chat_id, []):
             msg_id = entry.get("message_id")
+            print(type(msg_id))
             try:
                 await bot.delete_message(chat_id=int(chat_id), message_id=msg_id)
                 deleted += 1
@@ -120,6 +119,7 @@ class NotifyBot:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         UNUSED(context)
+        assert update.message is not None
         await update.message.reply_text(
             "👋 Bot is ready.👋\n"
             "Available commands:\n"
@@ -129,6 +129,7 @@ class NotifyBot:
     # ==== SEND AND TRACK NOTIFICATIONS ====
     async def send_notification(self, text: str, bot, command: list) -> None:
         msg = await bot.send_message(chat_id=int(self.secret["CHAT_ID"]), text=text)
+        logger.info("Telegram message sent")
 
         # Add metadata
         entry = {
@@ -138,7 +139,7 @@ class NotifyBot:
         }
 
         # returns the value of the item with the specified key.
-        # If the key does not exist, insert the key, with the specified value, see example below
+        # If the key does not exist, insert the key, with the specified value
         self.notification_history.setdefault(self.secret["CHAT_ID"], []).append(entry)
         self.save_sent_notifications(data=self.notification_history)
 
@@ -174,6 +175,7 @@ class NotifyBot:
 
         await app.initialize()
         await app.start()
+        assert app.updater is not None
         await app.updater.start_polling()
         await asyncio.sleep(2)  # Let bot initialize
 
@@ -181,7 +183,21 @@ class NotifyBot:
 
         # bot awake period
         # cmnds can be executed here
-        await asyncio.sleep(delay=int(self.config["ALIVE_PERIOD"]))
+        print(f"Bot still alive for {self.config["ALIVE_PERIOD"]} seconds")
+        text_to_update: str = "Progress: [{bar}] {current_iter}/{total} [seconds]"
+
+        # await asyncio.sleep(delay=int(self.config["ALIVE_PERIOD"]))
+        for i in range(int(self.config["ALIVE_PERIOD"]) + 1):
+            bar = self.progress_bar(current=i, total=int(self.config["ALIVE_PERIOD"]))
+            self.display_progress_bar(
+                fmt=text_to_update,
+                bar=bar,
+                current_iter=str(i),
+                total=self.config["ALIVE_PERIOD"],
+            )
+            await asyncio.sleep(delay=1)
+
+        print()
 
         await app.updater.stop()
         await app.stop()
