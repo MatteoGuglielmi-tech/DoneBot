@@ -25,7 +25,7 @@ class NotifyBot:
     def __post_init__(self) -> None:
         self.secret: dict[str, str] = utils.get_env_variables()
         self.config: dict[str, str] = utils.get_env_variables(pth=".conf")
-        self.notification_history: dict[str, list[dict[str, str]]] = {}
+        self.notification_history: dict[str, list[dict[str, str | int]]] = {}
 
     # ==== PERSISTENT HISTORY ====
     def load_past_notifications(self) -> None:
@@ -34,7 +34,7 @@ class NotifyBot:
                 self.notification_history = json.load(fp=f)
 
     def save_sent_notifications(
-        self, data: dict[str, list[dict[str, str]]]
+        self, data: dict[str, list[dict[str, str | int]]]
     ) -> None:
         with open(file=self.config["STORAGE_PATH"], mode="w") as f:
             json.dump(obj=data, fp=f, indent=2, sort_keys=False)
@@ -60,7 +60,7 @@ class NotifyBot:
         # get is safer than ["field"] since if the key do not exists it
         # doesn't raise a keyerror and return the default
         for entry in self.notification_history.get(chat_id, []):
-            msg_id: str|None= entry.get("message_id")
+            msg_id: str | int | None = entry.get("message_id")
             try:
                 if not msg_id:
                     raise Exception()
@@ -148,12 +148,35 @@ class NotifyBot:
         proc = await asyncio.create_subprocess_exec(
             *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
-        _, stderr = await proc.communicate()
+        stdout_bytes, stderr_bytes = await proc.communicate()
+        stdout: str = stdout_bytes.decode().strip()
+        stderr: str = stderr_bytes.decode().strip()
+
+        date: str = datetime.today().strftime(format="%Y-%m-%d")
+        time: str = datetime.now().strftime(format="%H-%M-%S")
+        common_prefix: str = os.path.join(self.config["LOG_PATH"], date, time)
+        if not os.path.isdir(s=common_prefix):
+            os.makedirs(name=common_prefix)
+
+        log_files: dict[str, str] = {
+            "stderr": os.path.join(common_prefix, "stderr.log"),
+            "stdout": os.path.join(common_prefix, "stdout.log"),
+        }
+
+        for file in log_files:
+            with open(file=log_files[file], mode="w") as log_file:
+                log_file.write(f"$ {' '.join(command)}\n\n")
+                if file == "stdout":
+                    log_file.write("STDOUT:\n" + stdout + "\n\n")
+                    await asyncio.sleep(1)
+                else:
+                    log_file.write("STDERR:\n" + stderr + "\n")
+                    await asyncio.sleep(1)
 
         if proc.returncode == 0:
             text = f"✅ Command `{' '.join(command)}` succeeded! ✅ "
         else:
-            text = f"❌ Command `{' '.join(command)}` failed ❌! \nReturn Code: ({proc.returncode})\n{stderr.decode()}"
+            text = f"❌ Command `{' '.join(command)}` failed ❌! \nError encountered: \n{stderr}"
 
         await self.send_notification(text, bot, command)
 
