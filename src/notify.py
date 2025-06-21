@@ -3,7 +3,6 @@ import argparse
 import asyncio
 import json
 import os
-import time
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -26,7 +25,7 @@ class NotifyBot:
     def __post_init__(self) -> None:
         self.secret: dict[str, str] = utils.get_env_variables()
         self.config: dict[str, str] = utils.get_env_variables(pth=".conf")
-        self.notification_history: dict[str, list[dict[str, str | int]]] = {}
+        self.notification_history: dict[str, list[dict[str, str]]] = {}
 
     # ==== PERSISTENT HISTORY ====
     def load_past_notifications(self) -> None:
@@ -35,7 +34,7 @@ class NotifyBot:
                 self.notification_history = json.load(fp=f)
 
     def save_sent_notifications(
-        self, data: dict[str, list[dict[str, str | int]]]
+        self, data: dict[str, list[dict[str, str]]]
     ) -> None:
         with open(file=self.config["STORAGE_PATH"], mode="w") as f:
             json.dump(obj=data, fp=f, indent=2, sort_keys=False)
@@ -61,10 +60,11 @@ class NotifyBot:
         # get is safer than ["field"] since if the key do not exists it
         # doesn't raise a keyerror and return the default
         for entry in self.notification_history.get(chat_id, []):
-            msg_id = entry.get("message_id")
-            print(type(msg_id))
+            msg_id: str|None= entry.get("message_id")
             try:
-                await bot.delete_message(chat_id=int(chat_id), message_id=msg_id)
+                if not msg_id:
+                    raise Exception()
+                await bot.delete_message(chat_id=int(chat_id), message_id=int(msg_id))
                 deleted += 1
             except Exception as e:
                 logger.warning(f"❌ Failed to delete message {msg_id}: {e} ❌")
