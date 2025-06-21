@@ -1,5 +1,7 @@
+import ast
 import logging
 import os
+import sys
 
 
 class CustomFormatter(logging.Formatter):
@@ -68,3 +70,56 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(sh)
 logger.addHandler(fh)
+
+
+class Formatter:
+    def extract_fstring_vars(self, fmt: str) -> list[str]:
+        try:
+            parsed: ast.Expression = ast.parse(source=f"f'''{fmt}'''", mode="eval")
+            return sorted(
+                {node.id for node in ast.walk(parsed) if isinstance(node, ast.Name)}
+            )
+        except SyntaxError:
+            return []
+
+    def extract_format_vars(self, fmt: str) -> list[str]:
+        import string
+
+        formatter = string.Formatter()
+        names = set()
+        for _, field_name, *_ in formatter.parse(fmt):
+            if field_name:
+                base_name = field_name.split(".")[0]
+                names.add(base_name)
+        return sorted(names)
+
+    def safe_fprint(self, fmt: str, mode: str = "fstring", **kwargs: str) -> None:
+        assert mode in {"fstring", "format"}
+
+        used_vars: list[str] = (
+            self.extract_fstring_vars(fmt=fmt)
+            if mode == "fstring"
+            else self.extract_format_vars(fmt=fmt)
+        )
+        provided_vars: list[str] = list(kwargs.keys())
+
+        # sanity checks
+        sanity_check: list[str] = list(set(provided_vars) - set(used_vars))
+        if sanity_check:
+            logger.warning(f"Dumping following provided variables: {sanity_check}")
+
+        sanity_check = [var for var in used_vars if var not in kwargs]
+        if sanity_check:
+            raise KeyError(
+                f"Not all variables in fmt have been specified: {sanity_check}"
+            )
+
+        output: str = ""
+        # formatting
+        if mode == "fstring":
+            output = eval(f"f'''{fmt}'''", {}, kwargs)
+        elif mode == "format":
+            output = fmt.format(**kwargs)
+
+        sys.stdout.write("\r" + output)
+        sys.stdout.flush()
