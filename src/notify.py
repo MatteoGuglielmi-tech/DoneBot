@@ -176,9 +176,15 @@ class NotifyBot:
         if proc.returncode == 0:
             text = f"✅ Command `{' '.join(command)}` succeeded! ✅ "
         else:
-            text = f"❌ Command `{' '.join(command)}` failed ❌! \nError encountered: \n{stderr}"
+            error_lines = [line for line in stderr.splitlines() if line.strip()]
+            # most of the times, error is last line in stacktrace
+            last_error = error_lines[-1] if error_lines else "Unknown error."
+            text = (
+                f"❌ Command `{' '.join(command)}` failed ❌!\n"
+                f"Error encountered: {last_error}"
+            )
 
-        await self.send_notification(text, bot, command)
+        await self.send_notification(text=text, bot=bot, command=command)
 
     # ==== Entrypoint ====
     async def main(self) -> None:
