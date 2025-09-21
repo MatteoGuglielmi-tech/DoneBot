@@ -1,8 +1,0 @@
----
-name: bot
-channels: [conda-forge, anaconda, default]
-dependencies:
-  - conda-forge::requests
-  - conda-forge::python-dotenv
-  - conda-forge::python-telegram-bot
-  - conda-forge::argcomplete
