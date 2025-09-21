@@ -1,4 +1,7 @@
 .env
 src/__pycache__/
-src/misc/app.log
-src/misc/notification_records.json
+src/misc
+
+# pixi environments
+.pixi/*
+!.pixi/config.toml

@@ -1,0 +1,13 @@
+[workspace]
+authors = ["MatteoGuglielmi-Tech <matteo.guglielmi.ma.gu@gmail.com>"]
+channels = ["conda-forge"]
+name = "notify_bot"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+python = "3.13.*"
+python-telegram-bot = ">=22.3,<23"
+python-dotenv = ">=1.1.1,<2"
