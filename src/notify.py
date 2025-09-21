@@ -1,4 +1,3 @@
-# PYTHON_ARGCOMPLETE_OK
 import argparse
 import asyncio
 import json
@@ -6,7 +5,6 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 
-import argcomplete
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, ContextTypes
@@ -310,7 +308,6 @@ class NotifyBot:
             required=True,
             help="Command to run (e.g. --cmd python --version)",
         )
-        argcomplete.autocomplete(parser)
         args = parser.parse_args()
 
         app = Application.builder().token(self.secret["BOT_TOKEN"]).build()
