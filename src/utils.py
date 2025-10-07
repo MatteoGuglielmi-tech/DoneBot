@@ -1,4 +1,6 @@
+import json
 from typing import Any
+from pathlib import Path
 
 from dotenv import dotenv_values
 
@@ -8,6 +10,10 @@ def UNUSED(var: Any) -> None:
     del _
 
 
-def get_env_variables(pth: str = "") -> dict[str, str]:
-    # ==== LOAD CONFIG ====
-    return dotenv_values() if not pth else dotenv_values(pth)
+def get_env_variables() -> dict[str, str]:
+    return dotenv_values()
+
+
+def load_config(pth: str|Path) -> dict[str,Any]:
+    with open(file=pth, mode="r", encoding="utf-8") as json_file:
+        return json.load(json_file)
