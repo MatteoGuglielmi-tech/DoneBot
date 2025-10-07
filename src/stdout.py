@@ -1,6 +1,5 @@
 import ast
 import logging
-import os
 import sys
 
 
@@ -39,24 +38,6 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-# ==== EXPORTER GLOBAL VARIABLES ====
-# File handler config
-try:
-    os.mkdir("./misc")
-except FileExistsError:
-    pass
-
-if os.path.isfile(path="./misc/app.log"):
-    path = "./misc/app.log"
-    filename, _ = os.path.splitext(p=path)
-
-fh = logging.FileHandler(filename="./misc/app.log", mode="w", encoding="utf-8")
-fh.setLevel(logging.DEBUG)
-fh.setFormatter(
-    fmt=logging.Formatter(
-        fmt="[%(asctime)s | %(filename)s->%(funcName)s():%(lineno)s] %(levelname)s: %(message)s"
-    )
-)
 # --------------------------------------
 
 # Stream handler config
@@ -69,7 +50,6 @@ sh.setFormatter(CustomFormatter())
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(sh)
-logger.addHandler(fh)
 
 
 class Formatter:
@@ -110,9 +90,7 @@ class Formatter:
 
         sanity_check = [var for var in used_vars if var not in kwargs]
         if sanity_check:
-            raise KeyError(
-                f"Not all variables in fmt have been specified: {sanity_check}"
-            )
+            raise KeyError(f"Not all variables in fmt have been specified: {sanity_check}")
 
         output: str = ""
         # formatting
