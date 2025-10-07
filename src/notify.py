@@ -1,7 +1,12 @@
+# PYTHON_ARGCOMPLETE_OK
 import argparse
 import asyncio
 import json
 import os
+import utils
+import argcomplete
+
+from pathlib import Path
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -10,7 +15,6 @@ from telegram.constants import ParseMode
 from telegram.ext import Application, CommandHandler, ContextTypes
 from telegram.ext._extbot import ExtBot
 
-import utils
 from stdout import Formatter, logger
 from utils import UNUSED
 
@@ -27,9 +31,15 @@ class NotifyBot:
         """Initializes the NotifyBot instance, loading environment variables
         and configuration, and setting up an empty notification history."""
 
+        prj_root = Path(__file__).parent.parent
+        _confpath = prj_root / "conf.json"
         self.secret: dict[str, str] = utils.get_env_variables()
-        self.config: dict[str, str] = utils.get_env_variables(pth=".conf")
+        config: dict[str, str] = utils.load_config(_confpath)
         self.notification_history: dict[str, list[dict[str, str | int]]] = {}
+
+        self.storage_path = prj_root / config["STORAGE_PATH"]
+        self.log_path = prj_root / config["LOG_PATH"]
+        self.alive_period = config["ALIVE_PERIOD"]
 
     # ==== PERSISTENT HISTORY ====
     def load_past_notifications(self) -> None:
@@ -39,8 +49,8 @@ class NotifyBot:
         dictionary.
         """
 
-        if os.path.exists(path=self.config["STORAGE_PATH"]):
-            with open(file=self.config["STORAGE_PATH"], mode="r") as f:
+        if os.path.exists(path=self.storage_path):
+            with open(file=self.storage_path, mode="r") as f:
                 self.notification_history = json.load(fp=f)
         else:
             # ensure that if the file doesn't exist, notification_history
@@ -60,7 +70,7 @@ class NotifyBot:
             metadata as values to be saved.
         """
 
-        with open(file=self.config["STORAGE_PATH"], mode="w") as f:
+        with open(file=self.storage_path, mode="w") as f:
             json.dump(obj=data, fp=f, indent=2, sort_keys=False)
 
     def progress_bar(self, current: int, total: int, length: int = 50) -> str:
@@ -266,7 +276,7 @@ class NotifyBot:
 
         date: str = datetime.today().strftime(format="%Y-%m-%d")
         time: str = datetime.now().strftime(format="%H-%M-%S")
-        common_prefix: str = os.path.join(self.config["LOG_PATH"], date, time)
+        common_prefix: str = os.path.join(self.log_path, date, time)
         if not os.path.isdir(s=common_prefix):
             os.makedirs(name=common_prefix)
 
@@ -295,6 +305,7 @@ class NotifyBot:
                 f"Error encountered: \n{last_error}"
             )
 
+
         await self.send_notification(text, bot, command)
 
     # ==== Entrypoint ====
@@ -313,6 +324,7 @@ class NotifyBot:
             required=True,
             help="Command to run (e.g. --cmd python --version)",
         )
+        argcomplete.autocomplete(parser)
         args = parser.parse_args()
 
         app = Application.builder().token(self.secret["BOT_TOKEN"]).build()
@@ -329,16 +341,16 @@ class NotifyBot:
 
         # bot awake period
         # cmnds can be executed here
-        print(f"Bot still alive for {self.config["ALIVE_PERIOD"]} seconds")
-        text_to_update: str = "Progress: [{bar}] {current_iter}/{total} [seconds]"
+        # print(f"Bot still alive for {self.config["ALIVE_PERIOD"]} seconds")
+        text_to_update: str = "Bot still alive for: [{bar}] {current_iter}/{total} [seconds]"
 
-        for i in range(int(self.config["ALIVE_PERIOD"]) + 1):
-            bar = self.progress_bar(current=i, total=int(self.config["ALIVE_PERIOD"]))
+        for i in range(int(self.alive_period) + 1):
+            bar = self.progress_bar(current=i, total=int(self.alive_period))
             self.display_progress_bar(
                 fmt=text_to_update,
                 bar=bar,
                 current_iter=str(i),
-                total=self.config["ALIVE_PERIOD"],
+                total=self.alive_period
             )
             await asyncio.sleep(delay=1)
 
