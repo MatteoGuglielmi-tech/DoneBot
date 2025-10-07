@@ -1,0 +1,6 @@
+{
+  "STORAGE_PATH": "misc/notification_records.json",
+  "LOG_PATH": "misc/app_logs/",
+  "ALIVE_PERIOD": 10
+}
+
