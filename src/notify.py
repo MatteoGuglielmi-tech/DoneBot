@@ -68,6 +68,7 @@ class NotifyBot:
             metadata as values to be saved.
         """
 
+        self.storage_path.parent.mkdir(parents=True, exist_ok=True)
         with open(file=self.storage_path, mode="w") as f:
             json.dump(obj=data, fp=f, indent=2, sort_keys=False)
 
