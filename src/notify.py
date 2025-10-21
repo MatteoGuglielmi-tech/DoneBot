@@ -1,10 +1,8 @@
-# PYTHON_ARGCOMPLETE_OK
 import argparse
 import asyncio
 import json
 import os
 import utils
-import argcomplete
 
 from pathlib import Path
 from dataclasses import dataclass
@@ -324,7 +322,6 @@ class NotifyBot:
             required=True,
             help="Command to run (e.g. --cmd python --version)",
         )
-        argcomplete.autocomplete(parser)
         args = parser.parse_args()
 
         app = Application.builder().token(self.secret["BOT_TOKEN"]).build()
