@@ -3,6 +3,7 @@ import asyncio
 import json
 import os
 import utils
+import re
 
 from pathlib import Path
 from dataclasses import dataclass
@@ -297,15 +298,72 @@ class NotifyBot:
         if proc.returncode == 0:
             text = f"✅ Command `{' '.join(command)}` succeeded! ✅ "
         else:
-            error_lines = [line for line in stderr.splitlines() if line.strip()]
-            last_error = error_lines[-1] if error_lines else "Unknown error"
+            error_summary = self.extract_main_error(stderr=stderr)
             text = (
-                f"❌ Command `{' '.join(command)}` failed ❌!\n"
-                f"Error encountered: \n{last_error}"
+                f"❌ Command `{' '.join(command)}` failed ❌!\n\n"
+                f"**Error:** `{error_summary}`\n\n"
+                f"Full log in: `{log_files['stderr']}`"
             )
 
-
         await self.send_notification(text, bot, command)
+
+    def extract_main_error(self, stderr: str, max_length: int = 200) -> str:
+        """Extract the main error message from stderr output.
+        
+        Handles chained exceptions by prioritizing the first error when
+        'During handling' messages are present.
+        
+        Parameters
+        ----------
+        stderr : str
+            The stderr output from the subprocess.
+        max_length : int
+            Maximum length for the error message.
+            
+        Returns
+        -------
+        str
+            The extracted error message, truncated if necessary.
+        """
+
+        if not stderr.strip():
+            return "Unknown error (no stderr output)"
+        
+        lines = stderr.strip().splitlines()
+        
+        has_chained_exception = any(
+            'During handling of the above exception' in line or
+            'The above exception was the direct cause' in line
+            for line in lines
+        )
+
+        exception_pattern = re.compile(
+            r"^(?:\[rank\d+\]:\s*)?"                             # Optional rank prefix like [rank0]:
+            r"([A-Z][a-zA-Z0-9]*(?:Error|Exception|Interrupt))"  # Exception type
+            r":\s*(.+)$"                                         # Colon and error message
+        )
+        
+        exception_lines = []
+        for i, line in enumerate(lines):
+            line_stripped = line.strip()
+            ma = exception_pattern.match(line_stripped)
+            if ma:
+                exception_type = ma.group(1)
+                exception_message = ma.group(2)
+                full_error = f"{exception_type}: {exception_message}"
+                exception_lines.append((i, full_error))
+
+        if not exception_lines:
+            error = "Unknown error"
+        elif has_chained_exception:
+            error = exception_lines[0][1]
+        else:
+            error = exception_lines[-1][1]
+
+        if len(error) > max_length:
+            error = error[:max_length] + "..."
+
+        return error
 
     # ==== Entrypoint ====
     async def main(self) -> None:
@@ -339,7 +397,6 @@ class NotifyBot:
 
         # bot awake period
         # cmnds can be executed here
-        # print(f"Bot still alive for {self.config["ALIVE_PERIOD"]} seconds")
         text_to_update: str = "Bot still alive for: [{bar}] {current_iter}/{total} [seconds]"
 
         for i in range(int(self.alive_period) + 1):
