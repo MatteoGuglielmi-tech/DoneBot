@@ -309,17 +309,17 @@ class NotifyBot:
 
     def extract_main_error(self, stderr: str, max_length: int = 200) -> str:
         """Extract the main error message from stderr output.
-        
+
         Handles chained exceptions by prioritizing the first error when
         'During handling' messages are present.
-        
+
         Parameters
         ----------
         stderr : str
             The stderr output from the subprocess.
         max_length : int
             Maximum length for the error message.
-            
+
         Returns
         -------
         str
@@ -328,12 +328,12 @@ class NotifyBot:
 
         if not stderr.strip():
             return "Unknown error (no stderr output)"
-        
+
         lines = stderr.strip().splitlines()
-        
+
         has_chained_exception = any(
-            'During handling of the above exception' in line or
-            'The above exception was the direct cause' in line
+            "During handling of the above exception" in line
+            or "The above exception was the direct cause" in line
             for line in lines
         )
 
@@ -342,7 +342,7 @@ class NotifyBot:
             r"([A-Z][a-zA-Z0-9]*(?:Error|Exception|Interrupt))"  # Exception type
             r":\s*(.+)$"                                         # Colon and error message
         )
-        
+
         exception_lines = []
         for i, line in enumerate(lines):
             line_stripped = line.strip()
