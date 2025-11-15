@@ -11,3 +11,7 @@ version = "0.1.0"
 python = ">=3.11"
 python-telegram-bot = ">=22.3,<23"
 python-dotenv = ">=1.1.1,<2"
+
+[pypi-dependencies]
+rich = ">=14.2.0, <15"
+psycopg2-binary = ">=2.9.11, <3"
