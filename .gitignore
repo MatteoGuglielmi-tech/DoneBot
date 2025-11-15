@@ -1,3 +1,4 @@
 .env
 misc
+logs
 src/__pycache__/
