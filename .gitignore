@@ -1,4 +1,7 @@
 .env
 misc
 logs
+run
+test.py
 src/__pycache__/
+src/notify.py
