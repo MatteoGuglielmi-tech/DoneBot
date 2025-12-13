@@ -17,3 +17,12 @@ def get_env_variables() -> dict[str, str]:
 def load_config(pth: str|Path) -> dict[str,Any]:
     with open(file=pth, mode="r", encoding="utf-8") as json_file:
         return json.load(json_file)
+
+
+def format_duration(seconds: float) -> str:
+    minutes, secs = divmod(seconds, 60)
+    hours, minutes = divmod(int(minutes), 60)
+    days, hours = divmod(int(minutes), 24)
+
+    return f"{days}d {hours:02d}:{minutes:02d}:{secs:05.2f}"
+

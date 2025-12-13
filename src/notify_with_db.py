@@ -17,6 +17,7 @@ import socket
 import re
 import utils
 import logging
+import time
 
 from datetime import datetime
 from dataclasses import dataclass, field
@@ -298,17 +299,21 @@ class NotifyBot:
             text=start_message_text, bot=bot, command=command, status="started"
         )
 
+        start: float = time.perf_counter()
         proc = await asyncio.create_subprocess_exec(
             *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         stdout_bytes, stderr_bytes = await proc.communicate()
+        elapsed = time.perf_counter() - start
+        format_elapsed = utils.format_duration(elapsed)
+
         stdout: str = stdout_bytes.decode().strip()
         stderr: str = stderr_bytes.decode().strip()
 
         if log_path:
             date: str = datetime.today().strftime(format="%Y-%m-%d")
-            time: str = datetime.now().strftime(format="%H-%M-%S")
-            log_dir: Path = self.log_path / date / time
+            clock: str = datetime.now().strftime(format="%H-%M-%S")
+            log_dir: Path = self.log_path / date / clock
             log_dir.mkdir(parents=True, exist_ok=True)
 
             out_log: Path = log_dir / "stdout.log"
@@ -320,12 +325,12 @@ class NotifyBot:
             await asyncio.sleep(1)
 
         if proc.returncode == 0:
-            text = f"✅ Command `{command_str}` succeeded on `{self.device_name}`! ✅"
+            text = f"✅ Command `{command_str}` succeeded on `{self.device_name}`!\n Took {format_elapsed} ✅"
             status = "success"
         else:
             error_summary = self.extract_main_error(stderr=stderr)
             text = (
-                f"❌ Command `{command_str}` failed on `{self.device_name}` ❌\n\n"
+                f"❌ Command `{command_str}` failed on `{self.device_name}` after {format_elapsed} ❌\n\n"
                 f"**Error:** `{error_summary}`\n\n"
             )
             if log_path:
