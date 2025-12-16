@@ -334,9 +334,17 @@ class NotifyBot:
                 f"**Error:** `{error_summary}`\n\n"
             )
             if log_path:
-                text += f"Full log in: `{err_log}`"
+                text += f"Full log in: `{err_log}`"  # type: ignore[reportPossiblyUnboundVariable]
 
             status = "failed"
+
+        job_name = os.environ.get("SLURM_JOB_NAME", "unknown")
+        job_id = os.environ.get("SLURM_JOB_ID")
+        if job_id and job_name != "unknown":
+            text += "\n"
+            text += 30 * "="
+            text += f"\nJob ID: `{job_id}`"
+            text += f"\nJob Name: `{job_name}`"
 
         await self.send_notification(text=text, bot=bot, command=command, status=status)
 
