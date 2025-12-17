@@ -335,7 +335,9 @@ class NotifyBot:
             await asyncio.sleep(1)
 
         if proc.returncode == 0:
-            text = f"✅ Command `{command_str}` succeeded on `{self.device_name}`!\n Took {format_elapsed} ✅"
+            text = f"✅ Command `{command_str}` succeeded on `{self.device_name}`!\n"
+            text += 30 * "="
+            text += f"\nRuntime {format_elapsed} ✅"
             status = "success"
         else:
             error_summary = self.extract_main_error(stderr=stderr)
