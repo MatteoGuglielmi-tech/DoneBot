@@ -290,11 +290,21 @@ class NotifyBot:
             The Telegram bot instance to send notifications.
         """
 
+        job_name = os.environ.get("SLURM_JOB_NAME", "unknown")
+        job_id = os.environ.get("SLURM_JOB_ID")
+
         # notification of start
         command_str: str = " ".join(command)
         start_message_text: str = (
             f"🚀 Command `{command_str}` started on {self.device_name}! 🚀"
         )
+
+        if job_id and job_name != "unknown":
+            start_message_text += "\n"
+            start_message_text += 30 * "="
+            start_message_text += f"\nJob ID: `{job_id}`"
+            start_message_text += f"\nJob Name: `{job_name}`"
+
         await self.send_notification(
             text=start_message_text, bot=bot, command=command, status="started"
         )
@@ -338,8 +348,6 @@ class NotifyBot:
 
             status = "failed"
 
-        job_name = os.environ.get("SLURM_JOB_NAME", "unknown")
-        job_id = os.environ.get("SLURM_JOB_ID")
         if job_id and job_name != "unknown":
             text += "\n"
             text += 30 * "="
