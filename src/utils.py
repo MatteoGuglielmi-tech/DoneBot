@@ -22,7 +22,6 @@ def load_config(pth: str|Path) -> dict[str,Any]:
 def format_duration(seconds: float) -> str:
     minutes, secs = divmod(seconds, 60)
     hours, minutes = divmod(int(minutes), 60)
-    days, hours = divmod(int(minutes), 24)
+    days, hours = divmod(int(hours), 24)
 
     return f"{days}d {hours:02d}:{minutes:02d}:{secs:05.2f}"
-
