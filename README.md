@@ -1,5 +1,5 @@
 # DoneBot
-`DoneBot` consists in a simple implementation of a Telegram bot capable of asynchronously sending notifications to a Telegram chat based on the status of a background running process.
+`DoneBot` consists in a simple implementation of a Telegram bot capable of asynchronously sending notifications to a Telegram chat based on the status of a background running process.  
 The scope of this project is to have a tool that notifies the user about the status of a subroutine he's not directly in control of.
 
 > Example of use case
@@ -7,7 +7,7 @@ The scope of this project is to have a tool that notifies the user about the sta
 > When working remotely via ssh, it might be helpful having a pop-up notification on your mobile informing you that a long subroutine ended without the need of staring at the monitor for hours (your eyes will thank me).
 
 ## What it does
-Very trivially, this bot wraps around a command issued via CLI. 
+Very trivially, this bot wraps around a command issued via CLI.  
 Shortly, the pipeline spawns a subprocess the bot is able to observe. Both in case of success and failure, the user is notified with a proper notification when the subroutine stops.
 
 The commands you can issue to the Bot via Telegram chat are:
@@ -25,8 +25,7 @@ To use the Bot, there are a couple of steps to take:
   > [!CAUTION]
   > Keep the `chat_id` and `bot_token` for yourself, do not share it with somebody else.
 
-By default, SQLite is used and no additional configuration is needed.
-If you want to use a PostgreSQL DB, you need to pass `--use_postgres` via CLI and you need to configure it.
+By default, SQLite is used and no additional configuration is needed. If you want to use a PostgreSQL DB, you need to pass `--use_postgres` via CLI and you need to configure it.  
 I personally use [Supabase](https://supabase.com). From the landing page, you can start your own project, select Python as programming language (for this project) and follow the indications for a correct configuration.
 
 At this point, create a `.env` file in the root folder with DB (PostgreSQL only) and bot sensitive information:
